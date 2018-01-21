@@ -46,4 +46,8 @@
 # VS Generated Files #
 #########################
 *.VC.db
+<<<<<<< HEAD
 *.VC.opendb
+=======
+
+>>>>>>> ignore .vs
