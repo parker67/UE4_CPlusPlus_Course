@@ -37,8 +37,9 @@
 **/Build
 **/Binaries
 **/DerivedDataCache
-**/Intermediate/
+**/Intermediate
 **/Saved
+**/.vs
 03_BuildingEscape/BuildingEscape/Content/StarterContent/
 
 #########################
