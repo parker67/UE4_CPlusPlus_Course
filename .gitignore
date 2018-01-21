@@ -30,3 +30,18 @@
 *.exe
 *.out
 *.app
+
+#########################
+# Unreal Generated Files #
+#########################
+**/Build
+**/Binaries
+**/DerivedDataCache
+**/Intermediate/
+**/Saved
+03_BuildingEscape/BuildingEscape/Content/StarterContent/
+
+#########################
+# VS Generated Files #
+#########################
+*.VC.db
