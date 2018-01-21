@@ -39,6 +39,7 @@
 **/DerivedDataCache
 **/Intermediate/
 **/Saved
+**/.vs
 03_BuildingEscape/BuildingEscape/Content/StarterContent/
 
 #########################
@@ -46,4 +47,3 @@
 #########################
 *.VC.db
 
-03_BuildingEscape/BuildingEscape/.vs/
