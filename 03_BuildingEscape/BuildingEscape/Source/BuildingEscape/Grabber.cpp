@@ -21,12 +21,18 @@ UGrabber::UGrabber()
 void UGrabber::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("Grabber Reporting for Duty!"));
-	// ...
-	
+	FindPhysicsHandleComponent();
+	SetupInputComponent();
 
-	/// look for attached physics handle
+}
+
+// look for attached physics handle
+void UGrabber::FindPhysicsHandleComponent()
+{
+
+	
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+
 	if (PhysicsHandle)
 	{
 		//physics handle found do stuff
@@ -36,14 +42,17 @@ void UGrabber::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("Physics Handle not attached to %s"),
 			*(GetOwner()->GetName()))
 	}
-
-	// look for attached inout component (only appears at run time)
+ }
+// look for attached inout component (only appears at run time)
+void UGrabber::SetupInputComponent()
+{
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 	if (InputComponent)
 	{
 		//inout handle found do stuff
 		UE_LOG(LogTemp, Warning, TEXT("Input component found"))
 			InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
+		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
 	}
 	else
 	{
@@ -53,14 +62,62 @@ void UGrabber::BeginPlay()
 }
 
 
+
+void UGrabber::Release() 
+{
+	UE_LOG(LogTemp, Warning, TEXT("Grab released"))
+
+		PhysicsHandle->ReleaseComponent();
+}
+
 void UGrabber::Grab() {
-	UE_LOG(LogTemp, Warning, TEXT("Grab Key pressed"))
+	UE_LOG(LogTemp, Warning, TEXT("Grab pressed"))
+
+	/// LINE TRACE and see if we reach any actors with physics body collision channel set
+	auto HitResult = GetFirstPhysicsBodyInReach();
+	auto ComponentToGrab = HitResult.GetComponent();
+	auto ActorHit = HitResult.GetActor();
+	/// if hit something then attach a physics handle
+	if (ActorHit)
+	{
+	// TODO attach physics handle
+	PhysicsHandle->GrabComponentAtLocationWithRotation(
+		ComponentToGrab,
+		NAME_None,
+		ComponentToGrab->GetOwner()->GetActorLocation(),
+		ComponentToGrab->GetOwner()->GetActorRotation()); //allow rotation
+	}
 }
 
 // Called every frame
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	// get player viewpoint this tick
+	FVector PlayerViewPointLocation;
+	FRotator PlayerViewPointRotation;
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewPointLocation,
+		OUT PlayerViewPointRotation
+	);
+
+	//UE_LOG(LogTemp, Warning, TEXT("Location: %s, Position: %s"), 
+	//	*PlayerViewPointLocation.ToString(), 
+	//*PlayerViewPointRotation.ToString()
+	//);
+	FVector LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
+	// if physics handle attached
+	if (PhysicsHandle->GetGrabbedComponent())
+	{
+		//move the object that were holding
+		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+	}
+	/// see what we hit
+
+}
+
+FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
+{
 
 	// get player viewpoint this tick
 	FVector PlayerViewPointLocation;
@@ -74,20 +131,7 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	//	*PlayerViewPointLocation.ToString(), 
 	//*PlayerViewPointRotation.ToString()
 	//);
-	
-	/// Draw a red trace in the world to visualise
-	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * Reach);
-	DrawDebugLine(
-		GetWorld(),
-		PlayerViewPointLocation,
-		LineTraceEnd,
-		FColor(255, 0, 0),
-		false,
-		0.f,
-		0.f,
-		10.f
-	);
-
+	FVector LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
 	/// Setup query parameters
 	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
 
@@ -104,12 +148,9 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	AActor* ActorHit = LineTraceHit.GetActor();
 	if (ActorHit)
 	{
-	UE_LOG(LogTemp, Warning, TEXT("Actor hit is %s"), 
-		*(ActorHit->GetName())
-	);
+		UE_LOG(LogTemp, Warning, TEXT("Actor hit is %s"),
+			*(ActorHit->GetName())
+		);
 	}
-	
-	/// see what we hit
-
+	return LineTraceHit;
 }
-
