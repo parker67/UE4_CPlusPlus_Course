@@ -33,11 +33,7 @@ void UGrabber::FindPhysicsHandleComponent()
 	
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 
-	if (PhysicsHandle)
-	{
-		//physics handle found do stuff
-	}
-	else
+	if (PhysicsHandle == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Physics Handle not attached to %s"),
 			*(GetOwner()->GetName()))
@@ -49,19 +45,14 @@ void UGrabber::SetupInputComponent()
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 	if (InputComponent)
 	{
-		//inout handle found do stuff
-		UE_LOG(LogTemp, Warning, TEXT("Input component found"))
-			InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
+		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
 		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s missing input component"),
-			*(GetOwner()->GetName()))
+		UE_LOG(LogTemp, Error, TEXT("%s missing input component"), *(GetOwner()->GetName()))
 	}
 }
-
-
 
 void UGrabber::Release() 
 {
@@ -80,10 +71,9 @@ void UGrabber::Grab() {
 	/// if hit something then attach a physics handle
 	if (ActorHit)
 	{
-	// TODO attach physics handle
 	PhysicsHandle->GrabComponentAtLocationWithRotation(
-		ComponentToGrab,
-		NAME_None,
+		ComponentToGrab, 
+		NAME_None, // no bones needed
 		ComponentToGrab->GetOwner()->GetActorLocation(),
 		ComponentToGrab->GetOwner()->GetActorRotation()); //allow rotation
 	}
@@ -93,24 +83,12 @@ void UGrabber::Grab() {
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	// get player viewpoint this tick
-	FVector PlayerViewPointLocation;
-	FRotator PlayerViewPointRotation;
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
-		OUT PlayerViewPointLocation,
-		OUT PlayerViewPointRotation
-	);
 
-	//UE_LOG(LogTemp, Warning, TEXT("Location: %s, Position: %s"), 
-	//	*PlayerViewPointLocation.ToString(), 
-	//*PlayerViewPointRotation.ToString()
-	//);
-	FVector LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
 	// if physics handle attached
 	if (PhysicsHandle->GetGrabbedComponent())
 	{
 		//move the object that were holding
-		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+		PhysicsHandle->SetTargetLocation(GetReachLineEnd());
 	}
 	/// see what we hit
 
@@ -119,29 +97,15 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
 {
 
-	// get player viewpoint this tick
-	FVector PlayerViewPointLocation;
-	FRotator PlayerViewPointRotation;
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
-		OUT PlayerViewPointLocation,
-		OUT PlayerViewPointRotation
-	);
-
-	//UE_LOG(LogTemp, Warning, TEXT("Location: %s, Position: %s"), 
-	//	*PlayerViewPointLocation.ToString(), 
-	//*PlayerViewPointRotation.ToString()
-	//);
-	FVector LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
 	/// Setup query parameters
-	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
 
 	/// Line Trace (Ray-cast) out to reach distance
 	FHitResult LineTraceHit;
-
+	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
 	GetWorld()->LineTraceSingleByObjectType(
 		OUT LineTraceHit,
-		PlayerViewPointLocation,
-		LineTraceEnd,
+		GetReachLineStart(),
+		GetReachLineEnd(),
 		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
 		TraceParameters
 	);
@@ -153,4 +117,27 @@ FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
 		);
 	}
 	return LineTraceHit;
+}
+
+FVector UGrabber::GetReachLineStart() const
+{
+	FVector PlayerViewPointLocation;
+	FRotator PlayerViewPointRotation;
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewPointLocation,
+		OUT PlayerViewPointRotation
+	);
+	return PlayerViewPointLocation;
+}
+
+FVector UGrabber::GetReachLineEnd() const
+{
+	FVector PlayerViewPointLocation;
+	FRotator PlayerViewPointRotation;
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewPointLocation,
+		OUT PlayerViewPointRotation
+	);
+
+	return PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
 }
