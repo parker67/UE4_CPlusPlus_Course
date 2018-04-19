@@ -57,7 +57,7 @@ void UGrabber::SetupInputComponent()
 void UGrabber::Release() 
 {
 	UE_LOG(LogTemp, Warning, TEXT("Grab released"))
-
+		if (!PhysicsHandle) { return; }
 		PhysicsHandle->ReleaseComponent();
 }
 
@@ -71,7 +71,8 @@ void UGrabber::Grab() {
 	/// if hit something then attach a physics handle
 	if (ActorHit)
 	{
-	PhysicsHandle->GrabComponentAtLocationWithRotation(
+		if (!PhysicsHandle) { return; }
+		PhysicsHandle->GrabComponentAtLocationWithRotation(
 		ComponentToGrab, 
 		NAME_None, // no bones needed
 		ComponentToGrab->GetOwner()->GetActorLocation(),
@@ -85,6 +86,7 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// if physics handle attached
+	if (!PhysicsHandle) { return; }
 	if (PhysicsHandle->GetGrabbedComponent())
 	{
 		//move the object that were holding
