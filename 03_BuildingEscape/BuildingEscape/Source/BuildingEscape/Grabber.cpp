@@ -47,6 +47,7 @@ void UGrabber::SetupInputComponent()
 	{
 		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
 		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
+		InputComponent->BindAction("Switch", IE_Pressed, this, &UGrabber::Switch);
 	}
 	else
 	{
@@ -59,6 +60,22 @@ void UGrabber::Release()
 	UE_LOG(LogTemp, Warning, TEXT("Grab released"))
 		if (!PhysicsHandle) { return; }
 		PhysicsHandle->ReleaseComponent();
+}
+
+void UGrabber::Switch()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Switch Pressed"))
+	auto HitResult = CheckForSwitch();
+	auto ActorHit = HitResult.GetActor();
+	/// if hit something then attach a physics handle
+	if (ActorHit)
+	{
+		FOutputDeviceNull ar;
+		ActorHit->CallFunctionByNameWithArguments(TEXT("CustomFunction"), ar, NULL, true);
+		SwitchesHit++; 
+	} else {
+		return;
+	}
 }
 
 void UGrabber::Grab() {
@@ -119,6 +136,36 @@ FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
 		);
 	}
 	return LineTraceHit;
+}
+
+FHitResult UGrabber::CheckForSwitch() const
+{
+
+	/// Setup query parameters
+
+	/// Line Trace (Ray-cast) out to reach distance
+	FHitResult LineTraceHit;
+	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
+	GetWorld()->LineTraceSingleByChannel(
+		OUT LineTraceHit,
+		GetReachLineStart(),
+		GetReachLineEnd(),
+		ECC_Pawn,
+		TraceParameters
+	);
+	AActor* ActorHit = LineTraceHit.GetActor();
+	if (ActorHit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Actor hit is %s"),
+			*(ActorHit->GetName())
+		);
+	}
+	return LineTraceHit;
+}
+
+int32 UGrabber::GetSwitchesHit()
+{
+	return SwitchesHit;
 }
 
 FVector UGrabber::GetReachLineStart() const

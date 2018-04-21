@@ -19,7 +19,7 @@ public:
 	UOpenDoor();
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	
 	UPROPERTY(BlueprintAssignable)
 		FDoorEvent OnOpen;
 	UPROPERTY(BlueprintAssignable)
@@ -35,13 +35,15 @@ protected:
 private:
 	UPROPERTY(EditAnywhere)
 		ATriggerVolume* PressurePlate = nullptr;
+	UPROPERTY(EditAnywhere)
+		ATriggerVolume* TriggerDoorClose = nullptr;
 //	UPROPERTY(EditAnywhere)
 		AActor* ActorThatOpens; //Remember pawn inherits from actor
 	UPROPERTY(EditAnywhere)
 		float TriggerMass = 30.f;
 	//The owner Door
 	AActor* Owner = nullptr;
-
+	bool PlayerWrongWay();
 	float GetTotalMassOfActorsOnPlate();
 	
 };

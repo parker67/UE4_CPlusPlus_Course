@@ -39,6 +39,8 @@ private:
 	// Called when grab is released
 	void Release();
 
+	void Switch();
+
 	//find physics handle 
 	void FindPhysicsHandleComponent();
 
@@ -47,6 +49,11 @@ private:
 
 	// Return hit for first physics body in reach
 	FHitResult GetFirstPhysicsBodyInReach() const;
+
+	FHitResult CheckForSwitch() const;
+	int32 SwitchesHit = 0;
+
+	int32 GetSwitchesHit();
 
 	//Returns current start of reachline
 	FVector GetReachLineStart() const;

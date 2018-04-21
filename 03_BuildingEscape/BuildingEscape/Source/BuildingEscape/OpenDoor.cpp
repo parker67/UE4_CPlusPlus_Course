@@ -3,6 +3,7 @@
 #include "OpenDoor.h"
 #include "engine/World.h"
 #include "GameFramework/Actor.h"
+#include "Grabber.h"
 
 #define OUT
 // Sets default values for this component's properties
@@ -38,14 +39,42 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	// Poll the Trigger Volume
+	UGrabber* grabber = Cast<UGrabber>(ActorThatOpens);
+	
+	if (grabber) {
+		UE_LOG(LogTemp, Warning, TEXT("Got Grabber"))
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Did not get Grabber"))
+	}
 	if (GetTotalMassOfActorsOnPlate() > 30.f) // TODO make into a parameter
 	{
-		OnOpen.Broadcast();
+		
+		if (PlayerWrongWay())
+		{
+			OnClose.Broadcast();
+		}
+		else {
+			OnOpen.Broadcast();
+		}
+
 	}else
 	{
 		OnClose.Broadcast();
 	}
+
 	// ...
+}
+
+bool UOpenDoor::PlayerWrongWay()
+{
+//	TArray<AActor*> TriggerOverlappingActors;
+	if (!TriggerDoorClose) { return false; }
+	bool Trigger = TriggerDoorClose->IsOverlappingActor(ActorThatOpens);
+	UE_LOG(LogTemp, Warning, TEXT("Actor overlapping is %s"),
+		(Trigger ? TEXT("True") : TEXT("False"))
+	);
+	return Trigger;
 }
 
 float UOpenDoor::GetTotalMassOfActorsOnPlate()
@@ -61,9 +90,9 @@ float UOpenDoor::GetTotalMassOfActorsOnPlate()
 	for (auto* Actor : OverlappingActors)
 	{
 		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
-		UE_LOG(LogTemp, Warning, TEXT("Actor overlapping is %s"),
-			*(Actor->GetName())
-		);
+		//UE_LOG(LogTemp, Warning, TEXT("Actor overlapping is %s"),
+		//	*(Actor->GetName())
+		//);
 	}
 
 	return TotalMass;
