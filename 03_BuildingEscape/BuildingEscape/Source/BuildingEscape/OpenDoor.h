@@ -34,6 +34,10 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere)
+		AActor* Lamp1 = nullptr;
+	UPROPERTY(EditAnywhere)
+		AActor* Lamp2 = nullptr;
+	UPROPERTY(EditAnywhere)
 		ATriggerVolume* PressurePlate = nullptr;
 	UPROPERTY(EditAnywhere)
 		ATriggerVolume* TriggerDoorClose = nullptr;

@@ -3,7 +3,6 @@
 #include "OpenDoor.h"
 #include "engine/World.h"
 #include "GameFramework/Actor.h"
-#include "Grabber.h"
 
 #define OUT
 // Sets default values for this component's properties
@@ -39,28 +38,41 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	// Poll the Trigger Volume
-	UGrabber* grabber = Cast<UGrabber>(ActorThatOpens);
-	
-	if (grabber) {
-		UE_LOG(LogTemp, Warning, TEXT("Got Grabber"))
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("Did not get Grabber"))
-	}
-	if (GetTotalMassOfActorsOnPlate() > 30.f) // TODO make into a parameter
-	{
-		
-		if (PlayerWrongWay())
+	if (Lamp1 && Lamp2) {
+		if ((GetTotalMassOfActorsOnPlate() > 30.f) || (Lamp1->ActorHasTag(FName("HasTurned")) && Lamp2->ActorHasTag(FName("HasTurned")))) // TODO make into a parameter
+		{
+
+			if (PlayerWrongWay())
+			{
+				OnClose.Broadcast();
+			}
+			else {
+				OnOpen.Broadcast();
+			}
+
+		}
+		else
 		{
 			OnClose.Broadcast();
 		}
-		else {
-			OnOpen.Broadcast();
-		}
+	}
+	else {
+		if (GetTotalMassOfActorsOnPlate() > 30.f) // TODO make into a parameter
+		{
 
-	}else
-	{
-		OnClose.Broadcast();
+			if (PlayerWrongWay())
+			{
+				OnClose.Broadcast();
+			}
+			else {
+				OnOpen.Broadcast();
+			}
+
+		}
+		else
+		{
+			OnClose.Broadcast();
+		}
 	}
 
 	// ...
